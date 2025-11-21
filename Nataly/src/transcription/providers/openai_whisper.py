@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 
 from src.core.config import AppConfig
 from src.domain.models import TranscriptionResult, TranscriptionSegment
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -52,9 +55,11 @@ class OpenAIWhisperProvider:
 	def transcribe(self, wav_path: Path) -> TranscriptionResult:
 		"""Transcribe with configured OpenAI model, fallback to whisper-1 if needed."""
 		model = self.config.cloud.model or "gpt-4o-mini-transcribe"
+		logger.info(f"Transcribing with OpenAI model: {model}")
 		try:
 			return self._try_transcribe(model, wav_path)
-		except Exception:
+		except Exception as e:
+			logger.warning(f"Model {model} failed: {e}, falling back to whisper-1")
 			# fallback to whisper-1 for compatibility
 			return self._try_transcribe("whisper-1", wav_path)
 

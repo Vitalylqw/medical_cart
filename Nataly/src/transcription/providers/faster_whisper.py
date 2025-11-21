@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
 from pathlib import Path
 
 from src.core.config import AppConfig
 from src.domain.models import TranscriptionResult, TranscriptionSegment
+
+logger = logging.getLogger(__name__)
 
 try:
 	from faster_whisper import WhisperModel  # type: ignore
@@ -28,23 +31,29 @@ class FasterWhisperProvider:
 				"Модуль 'faster-whisper' не найден. "
 				"Установите зависимость: pip install faster-whisper"
 			)
-		# Set HF_HOME to project model directory before model initialization
-		# This ensures faster-whisper uses project-local cache instead of system cache
+		
+		# Construct path to local model: var/models/faster-whisper-{model_name}
 		model_dir = Path(self.config.paths.model_dir).resolve()
-		original_hf_home = os.environ.get("HF_HOME")
-		try:
-			os.environ["HF_HOME"] = str(model_dir)
-			self._model = WhisperModel(
-				self.config.local.model,
-				device=self.config.local.device,
-				compute_type=self.config.local.compute_type,
-			)
-		finally:
-			# Restore original HF_HOME if it was set
-			if original_hf_home is not None:
-				os.environ["HF_HOME"] = original_hf_home
-			elif "HF_HOME" in os.environ:
-				os.environ.pop("HF_HOME")
+		model_name = self.config.local.model
+		# Check for prefixed directory first (e.g. faster-whisper-large-v3)
+		local_model_path = model_dir / f"faster-whisper-{model_name}"
+		
+		if not local_model_path.exists():
+			# Fallback to non-prefixed just in case
+			local_model_path = model_dir / model_name
+
+		logger.info(
+			f"Loading faster-whisper model from local path: {local_model_path} "
+			f"(device: {self.config.local.device}, compute: {self.config.local.compute_type})"
+		)
+
+		self._model = WhisperModel(
+			str(local_model_path),
+			device=self.config.local.device,
+			compute_type=self.config.local.compute_type,
+			local_files_only=True,
+		)
+		logger.info("Model loaded successfully")
 
 	def transcribe(self, wav_path: Path) -> TranscriptionResult:
 		"""Transcribe a wav file (16k mono) with faster-whisper.

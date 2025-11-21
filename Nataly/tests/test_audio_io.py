@@ -1,8 +1,9 @@
-import shutil
-from pathlib import Path
-import wave
 import math
+import shutil
 import struct
+import wave
+from pathlib import Path
+
 import pytest
 
 from src.core.config import load_config

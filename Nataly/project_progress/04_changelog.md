@@ -10,6 +10,8 @@
 
 
 2025-11-21
+- **Dependencies**: Обновлен `requirements.txt`. Зафиксированы `numpy==1.26.4` и `ctranslate2==4.0.0` для исправления "Access Violation" на Windows (AMD CPU). Добавлен `requests>=2.31.0` (отсутствующая зависимость для `faster-whisper` 1.0.3).
+- **Providers**: `src/transcription/providers/faster_whisper.py` переработан для строгой загрузки локальной модели из `var/models/faster-whisper-large-v3`. Добавлен флаг `local_files_only=True` для запрета обращений к Hugging Face.
 - scripts/test/run_tests.bat: сделан независимым от текущей директории с использованием `%~dp0`, переходом в корень проекта и явным вызовом `venv\Scripts\python.exe -m pytest -q`. Корректный код выхода передается наружу.
 - Результат после фикса: тесты проходят (2 passed, 1 skipped).
 - scripts/servises/download_faster_whisper_model.py: добавлен утилитный скрипт для скачивания модели faster‑whisper через инициализацию `WhisperModel` (CPU по умолчанию). Поддерживает `--model`, `--device`, `--compute-type`. 
@@ -22,3 +24,4 @@
   - Команда: `venv\Scripts\python.exe -m pytest tests\test_transcription_router_smoke.py -vv -rs`
   - Результат: `SKIPPED (Model may not be available locally; skip heavy smoke test)`
   - Что дальше: предзагрузить модель faster-whisper и убедиться в наличии `ffmpeg`
+- **Tests**: Выполнен ручной тест `scripts/test/test_voce_simple.py` на файле `voce.mp3`. Подтверждена работоспособность пайплайна транскрибации с локальной моделью (Provider: local:faster-whisper).

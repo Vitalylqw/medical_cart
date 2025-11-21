@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import concurrent.futures
+import logging
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Protocol
@@ -13,6 +14,8 @@ from src.transcription.chunking import segment_wav_by_time
 from src.transcription.providers.faster_whisper import FasterWhisperProvider
 from src.transcription.providers.openai_whisper import OpenAIWhisperProvider
 from src.utils.hashing import sha256_of_file
+
+logger = logging.getLogger(__name__)
 
 
 class TranscriptionProvider(Protocol):
@@ -51,22 +54,29 @@ class TranscriptionRouter:
 
 		Fallback: if default provider fails or times out, and fallback=cloud -> try cloud.
 		"""
+		logger.info(f"Starting transcription for: {src_audio_path.name}")
+		
 		# Normalize to wav 16k mono
 		wav = ensure_wav_16k_mono(
 			src_audio_path, config=self.config, dst_dir=Path(self.config.paths.cache_dir)
 		)
+		logger.debug(f"Normalized audio to: {wav}")
 
 		# Cache check (by normalized wav bytes)
 		storage = Storage(self.config)
 		file_hash = sha256_of_file(wav)
 		cached = storage.get_transcript(file_hash)
 		if cached:
+			provider = cached.get('provider')
+			logger.info(f"Cache hit for hash: {file_hash[:8]}... (provider: {provider})")
 			return TranscriptionResult(
 				text=cached["text"],
 				language=cached.get("language"),
 				segments=[],
 				provider=f'cache:{cached.get("provider","")}',
 			)
+		
+		logger.debug(f"Cache miss for hash: {file_hash[:8]}...")
 
 		# Optional chunking by duration
 		chunks = segment_wav_by_time(
@@ -75,6 +85,7 @@ class TranscriptionRouter:
 			output_dir=Path(self.config.paths.cache_dir) / (wav.stem + "_chunks"),
 			ffmpeg_bin=self.config.paths.ffmpeg_bin,
 		)
+		logger.debug(f"Audio split into {len(chunks)} chunk(s)")
 
 		def transcribe_all(provider: TranscriptionProvider) -> TranscriptionResult:
 			all_segments: list[TranscriptionSegment] = []
@@ -93,7 +104,7 @@ class TranscriptionRouter:
 						)
 					)
 				if res.text:
-                    # separate chunks by space
+					# separate chunks by space
 					all_text_parts.append(res.text.strip())
 				# update offset using last segment if present
 				if res.segments:
@@ -113,6 +124,8 @@ class TranscriptionRouter:
 			else:
 				prov = self._get_cloud()
 				timeout = self.config.timeouts.cloud_sec
+			
+			logger.info(f"Transcribing with {provider_name} provider (timeout: {timeout}s)")
 			# run the transcription (possibly long) with timeout protection
 			res = self._run_with_timeout(lambda: transcribe_all(prov), timeout=timeout)
 			# fill provider name on result
@@ -120,15 +133,19 @@ class TranscriptionRouter:
 				res.provider = prov.config.cloud.model
 			else:
 				res.provider = "local:faster-whisper"
+			logger.info(f"Transcription completed with {provider_name} provider")
 			return res
 
 		default_p = self.config.provider.default
 		try:
 			result = try_with(default_p)
-		except Exception:
+		except Exception as e:
+			logger.warning(f"Provider {default_p} failed: {e}")
 			if self.config.provider.fallback == "cloud" and default_p != "cloud":
+				logger.info("Attempting fallback to cloud provider")
 				result = try_with("cloud")
 			else:
+				logger.error("Transcription failed with no fallback available")
 				raise
 
 		# Save to cache
@@ -137,6 +154,10 @@ class TranscriptionRouter:
 			language=result.language,
 			text=result.text,
 			provider=result.provider,
+		)
+		logger.info(
+			f"Transcription saved to cache. Language: {result.language}, "
+			f"Text length: {len(result.text)} chars"
 		)
 		return result
 
