@@ -3,12 +3,11 @@ from __future__ import annotations
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Optional
 
 from src.core.config import AppConfig
 
 
-def _resolve_bin(executable: str, ffmpeg_bin: Optional[str]) -> str:
+def _resolve_bin(executable: str, ffmpeg_bin: str | None) -> str:
 	"""Resolve ffmpeg/ffprobe binary path considering configured ffmpeg_bin."""
 	if ffmpeg_bin:
 		ff = Path(ffmpeg_bin)
@@ -20,13 +19,14 @@ def _resolve_bin(executable: str, ffmpeg_bin: Optional[str]) -> str:
 	found = shutil.which(executable)
 	if not found:
 		raise RuntimeError(
-			f"Не найден {executable}. Установите ffmpeg или запустите scripts\\servises\\download_ffmpeg.bat "
-			f"и укажите путь в paths.ffmpeg_bin в src/config/settings.yaml"
+			f"Не найден {executable}. Установите ffmpeg или запустите "
+			f"scripts\\servises\\download_ffmpeg.bat и укажите путь в "
+			f"paths.ffmpeg_bin в src/config/settings.yaml"
 		)
 	return found
 
 
-def convert_to_wav_16k_mono(input_path: Path, output_path: Path, *, ffmpeg_bin: Optional[str]) -> Path:
+def convert_to_wav_16k_mono(input_path: Path, output_path: Path, *, ffmpeg_bin: str | None) -> Path:
 	"""Convert any audio to PCM s16le WAV 16kHz mono using ffmpeg.
 
 	Args:
@@ -62,7 +62,7 @@ def ensure_wav_16k_mono(src_path: Path, *, config: AppConfig, dst_dir: Path) -> 
 	return convert_to_wav_16k_mono(src_path, out_path, ffmpeg_bin=config.paths.ffmpeg_bin)
 
 
-def probe_duration_seconds(path: Path, *, ffmpeg_bin: Optional[str]) -> float:
+def probe_duration_seconds(path: Path, *, ffmpeg_bin: str | None) -> float:
 	"""Get media duration in seconds using ffprobe."""
 	cmd = [
 		_resolve_bin("ffprobe", ffmpeg_bin),
@@ -74,7 +74,7 @@ def probe_duration_seconds(path: Path, *, ffmpeg_bin: Optional[str]) -> float:
 		"default=noprint_wrappers=1:nokey=1",
 		str(path),
 	]
-	res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True, text=True)
+	res = subprocess.run(cmd, capture_output=True, check=True, text=True)
 	try:
 		return float(res.stdout.strip())
 	except ValueError as exc:

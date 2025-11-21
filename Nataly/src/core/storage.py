@@ -3,7 +3,6 @@ from __future__ import annotations
 import sqlite3
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from src.core.config import AppConfig
 
@@ -52,15 +51,18 @@ class Storage:
 				"""
 			)
 
-	def get_transcript(self, file_hash: str) -> Optional[dict]:
+	def get_transcript(self, file_hash: str) -> dict | None:
 		with self._connect() as conn:
 			row = conn.execute(
-				"SELECT file_hash, language, text, provider, created_at FROM transcripts WHERE file_hash=?",
+				"SELECT file_hash, language, text, provider, created_at "
+				"FROM transcripts WHERE file_hash=?",
 				(file_hash,),
 			).fetchone()
 			return dict(row) if row else None
 
-	def save_transcript(self, *, file_hash: str, language: Optional[str], text: str, provider: str) -> None:
+	def save_transcript(
+		self, *, file_hash: str, language: str | None, text: str, provider: str
+	) -> None:
 		with self._connect() as conn:
 			conn.execute(
 				"""
@@ -74,7 +76,7 @@ class Storage:
 				(file_hash, language, text, provider),
 			)
 
-	def get_user_settings(self, user_id: str) -> Optional[dict]:
+	def get_user_settings(self, user_id: str) -> dict | None:
 		with self._connect() as conn:
 			row = conn.execute(
 				"SELECT user_id, provider, language, mode FROM user_settings WHERE user_id=?",
@@ -86,9 +88,9 @@ class Storage:
 		self,
 		*,
 		user_id: str,
-		provider: Optional[str] = None,
-		language: Optional[str] = None,
-		mode: Optional[str] = None,
+		provider: str | None = None,
+		language: str | None = None,
+		mode: str | None = None,
 	) -> None:
 		with self._connect() as conn:
 			conn.execute(

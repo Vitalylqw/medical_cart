@@ -3,7 +3,6 @@ from __future__ import annotations
 import math
 import subprocess
 from pathlib import Path
-from typing import Optional, Sequence
 
 from src.transcription.audio_io import _resolve_bin, probe_duration_seconds
 
@@ -13,7 +12,7 @@ def segment_wav_by_time(
 	*,
 	max_sec: int,
 	output_dir: Path,
-	ffmpeg_bin: Optional[str],
+	ffmpeg_bin: str | None,
 ) -> list[Path]:
 	"""Split WAV file into segments with maximum duration max_sec using ffmpeg segment muxer.
 

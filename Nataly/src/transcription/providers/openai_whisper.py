@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 from src.core.config import AppConfig
 from src.domain.models import TranscriptionResult, TranscriptionSegment
@@ -34,18 +33,21 @@ class OpenAIWhisperProvider:
 			)
 
 		segments: list[TranscriptionSegment] = []
-		language: Optional[str] = None
+		language: str | None = None
 		text: str = getattr(res, "text", "") or ""
 
 		if hasattr(res, "segments") and res.segments:
 			for seg in res.segments:
 				start = float(getattr(seg, "start", 0.0) or 0.0)
 				end = float(getattr(seg, "end", 0.0) or 0.0)
-				segments.append(TranscriptionSegment(start=start, end=end, text=getattr(seg, "text", "")))
+				seg_text = getattr(seg, "text", "")
+				segments.append(TranscriptionSegment(start=start, end=end, text=seg_text))
 		if hasattr(res, "language"):
-			language = getattr(res, "language")
+			language = res.language
 
-		return TranscriptionResult(text=text, language=language, segments=segments, provider=f"cloud:{model}")
+		return TranscriptionResult(
+			text=text, language=language, segments=segments, provider=f"cloud:{model}"
+		)
 
 	def transcribe(self, wav_path: Path) -> TranscriptionResult:
 		"""Transcribe with configured OpenAI model, fallback to whisper-1 if needed."""

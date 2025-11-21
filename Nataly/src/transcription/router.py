@@ -6,13 +6,13 @@ from pathlib import Path
 from typing import Protocol
 
 from src.core.config import AppConfig
-from src.domain.models import TranscriptionResult, TranscriptionSegment
 from src.core.storage import Storage
-from src.utils.hashing import sha256_of_file
+from src.domain.models import TranscriptionResult, TranscriptionSegment
 from src.transcription.audio_io import ensure_wav_16k_mono
 from src.transcription.chunking import segment_wav_by_time
 from src.transcription.providers.faster_whisper import FasterWhisperProvider
 from src.transcription.providers.openai_whisper import OpenAIWhisperProvider
+from src.utils.hashing import sha256_of_file
 
 
 class TranscriptionProvider(Protocol):
@@ -52,7 +52,9 @@ class TranscriptionRouter:
 		Fallback: if default provider fails or times out, and fallback=cloud -> try cloud.
 		"""
 		# Normalize to wav 16k mono
-		wav = ensure_wav_16k_mono(src_audio_path, config=self.config, dst_dir=Path(self.config.paths.cache_dir))
+		wav = ensure_wav_16k_mono(
+			src_audio_path, config=self.config, dst_dir=Path(self.config.paths.cache_dir)
+		)
 
 		# Cache check (by normalized wav bytes)
 		storage = Storage(self.config)
@@ -79,14 +81,16 @@ class TranscriptionRouter:
 			all_text_parts: list[str] = []
 			language: str | None = None
 			offset = 0.0
-			for idx, ch in enumerate(chunks):
+			for ch in chunks:
 				res = provider.transcribe(ch)
 				if language is None and res.language:
 					language = res.language
 				# Offset segments to original timeline
 				for s in res.segments or []:
 					all_segments.append(
-						TranscriptionSegment(start=s.start + offset, end=s.end + offset, text=s.text)
+						TranscriptionSegment(
+							start=s.start + offset, end=s.end + offset, text=s.text
+						)
 					)
 				if res.text:
                     # separate chunks by space
@@ -98,7 +102,9 @@ class TranscriptionRouter:
 					# fallback to rough estimation: average duration per chunk
 					offset += self.config.chunk.max_sec
 			text = " ".join(t for t in all_text_parts if t)
-			return TranscriptionResult(text=text, language=language, segments=all_segments, provider="")
+			return TranscriptionResult(
+				text=text, language=language, segments=all_segments, provider=""
+			)
 
 		def try_with(provider_name: str) -> TranscriptionResult:
 			if provider_name == "local":
@@ -110,7 +116,10 @@ class TranscriptionRouter:
 			# run the transcription (possibly long) with timeout protection
 			res = self._run_with_timeout(lambda: transcribe_all(prov), timeout=timeout)
 			# fill provider name on result
-			res.provider = getattr(prov, "config").cloud.model if provider_name == "cloud" else "local:faster-whisper"
+			if provider_name == "cloud":
+				res.provider = prov.config.cloud.model
+			else:
+				res.provider = "local:faster-whisper"
 			return res
 
 		default_p = self.config.provider.default

@@ -9,3 +9,16 @@
 - tests: unit и smoke, бат-скрипт запуска pytest.
 
 
+2025-11-21
+- scripts/test/run_tests.bat: сделан независимым от текущей директории с использованием `%~dp0`, переходом в корень проекта и явным вызовом `venv\Scripts\python.exe -m pytest -q`. Корректный код выхода передается наружу.
+- Результат после фикса: тесты проходят (2 passed, 1 skipped).
+- scripts/servises/download_faster_whisper_model.py: добавлен утилитный скрипт для скачивания модели faster‑whisper через инициализацию `WhisperModel` (CPU по умолчанию). Поддерживает `--model`, `--device`, `--compute-type`. 
+- scripts/servises/download_faster_whisper_model.bat: бат‑обёртка с проверкой venv и прокидыванием аргументов.
+- pyproject: добавлен `pytest-cov` в dev-зависимости; создан `scripts/test/run_coverage.bat`, который зеркалит `run_tests.bat`, но запускает `pytest --cov=src --cov-report=term-missing`.
+- tests: добавлены `tests/test_core_config.py`, `tests/test_core_storage.py`, `tests/test_transcription_router_unit.py`. Покрыто: загрузка конфигурации (.env + settings + директории), upsert в SQLite-хранилище (transcripts/user_settings), логика `TranscriptionRouter` (кэш-хит, fallback на облако, склейка чанков и смещения сегментов) без тяжелых зависимостей (ffmpeg/faster-whisper).
+- Результат `scripts/test/run_coverage.bat`: 8 passed, 1 skipped, покрытие 59%. Heavy smoke по-прежнему `skip` при отсутствии faster-whisper/ffmpeg.
+- Ruff прогнан для новых тестов; всплыло предупреждение о переходе на `[tool.ruff.lint]` (TODO для обновления конфигурации).
+- Smoke-тест faster-whisper/ffmpeg:
+  - Команда: `venv\Scripts\python.exe -m pytest tests\test_transcription_router_smoke.py -vv -rs`
+  - Результат: `SKIPPED (Model may not be available locally; skip heavy smoke test)`
+  - Что дальше: предзагрузить модель faster-whisper и убедиться в наличии `ffmpeg`

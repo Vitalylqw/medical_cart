@@ -1,15 +1,25 @@
 @echo off
 setlocal ENABLEDELAYEDEXPANSION
 
-if not exist "..\..\venv\Scripts\activate.bat" (
-  echo [i] Activate your virtualenv before running tests: venv\Scripts\activate.bat
-) else (
-  call ..\..\venv\Scripts\activate.bat
+rem Resolve project root relative to this script
+set "SCRIPT_DIR=%~dp0"
+pushd "%SCRIPT_DIR%\..\.."
+
+set "VENV_PY=venv\Scripts\python.exe"
+if not exist "%VENV_PY%" (
+  echo [i] Virtualenv not found at venv\Scripts\python.exe
+  echo [i] Create and activate venv, then install pytest:
+  echo     python -m venv venv
+  echo     venv\Scripts\activate.bat
+  echo     python -m pip install -U pip pytest
+  popd
+  endlocal
+  exit /b 1
 )
 
 echo Running pytest...
-python -m pytest -q
+"%VENV_PY%" -m pytest -q
+set "EXIT_CODE=%ERRORLEVEL%"
 
-endlocal
-
-
+popd
+endlocal & exit /b %EXIT_CODE%

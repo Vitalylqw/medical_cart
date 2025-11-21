@@ -31,5 +31,6 @@ paths:
   cache_dir: var/cache
   out_dir: var/out
   db_path: var/app.db
+  model_dir: var/models
 
 

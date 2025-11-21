@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 import yaml
-from pydantic import BaseModel, Field
 from dotenv import load_dotenv
-import os
+from pydantic import BaseModel, Field
 
 
 class ProviderSelection(BaseModel):
@@ -44,12 +44,13 @@ class Timeouts(BaseModel):
 
 
 class Paths(BaseModel):
-	ffmpeg_bin: Optional[str] = None
+	ffmpeg_bin: str | None = None
 	base_dir: str = "var"
 	inbox_dir: str = "var/inbox"
 	cache_dir: str = "var/cache"
 	out_dir: str = "var/out"
 	db_path: str = "var/app.db"
+	model_dir: str = "var/models"
 
 
 class AppConfig(BaseModel):
@@ -103,6 +104,7 @@ def load_config() -> AppConfig:
 		Path(cfg.paths.inbox_dir),
 		Path(cfg.paths.cache_dir),
 		Path(cfg.paths.out_dir),
+		Path(cfg.paths.model_dir),
 		Path(Path(cfg.paths.db_path).parent),
 	]:
 		sub.mkdir(parents=True, exist_ok=True)
