@@ -40,9 +40,24 @@ scripts\servises\run_bot.bat
 ## Структура
 См. `project_progress/02_plan.md` и `src/`.
 
+## Тестирование
+
+Запуск тестов:
+```bash
+scripts\test\run_tests.bat
+```
+
+Проверка покрытия кода:
+```bash
+scripts\test\run_coverage.bat
+```
+
+Текущее покрытие: 59% (8 passed, 1 skipped). Unit-тесты покрывают: `core/config`, `core/storage`, `transcription/router`.
+
 ## Качество кода
 - Линтер: Ruff (`pyproject.toml`)
 - Стиль: PEP8, длина строки 100
+- Тесты: pytest + pytest-cov
 
 ## Примечания
 - Работает без вебхуков (long polling).

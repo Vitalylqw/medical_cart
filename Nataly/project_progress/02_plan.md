@@ -10,7 +10,7 @@
 5) Провайдер OpenAI + тестовый .bat.
 6) Router провайдеров + fallback + тайм‑ауты + кэш.
 7) Бот (`app.py`, `bot/router.py`) и UX.
-8) Интеграционные тесты и бат‑скрипты запуска.
+8) Интеграционные тесты и бат‑скрипты запуска. [x] Unit-тесты для core/config, core/storage, transcription/router; скрипты run_tests.bat, run_coverage.bat.
 9) Документация (обновить 01/02/03/04).
 10) CI: Ruff и .gitignore.
 

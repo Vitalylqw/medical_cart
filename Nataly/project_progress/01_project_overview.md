@@ -17,6 +17,7 @@
 - `faster-whisper` (CUDA, float16) + OpenAI API как резерв
 - Конфиг через `.env` + `src/config/settings.yaml`
 - Хранилище: SQLite + файлы в `var/`
+- Тестирование: `pytest` + `pytest-cov` (покрытие 59%), unit-тесты для core/config, core/storage, transcription/router
 
 ## Подключение провайдеров (кратко)
 - Локально: `pip install faster-whisper` и установите `ffmpeg`. Путь можно указать в
