@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
@@ -28,7 +29,10 @@ async def main() -> None:
 	logger.info(f"Starting Telegram Audio Transcriber (env: {config.env})")
 	logger.info(f"Provider: {config.provider.default}, Fallback: {config.provider.fallback}")
 
-	bot = Bot(token=config.telegram_token, parse_mode=ParseMode.HTML)
+	bot = Bot(
+		token=config.telegram_token,
+		default=DefaultBotProperties(parse_mode=ParseMode.HTML)
+	)
 	dp = Dispatcher(storage=MemoryStorage())
 	dp.include_router(get_router(config=config))
 

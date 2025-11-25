@@ -11,7 +11,7 @@
 6) Router провайдеров + fallback + тайм‑ауты + кэш.
 7) Бот (`app.py`, `bot/router.py`) и UX.
 8) Интеграционные тесты и бат‑скрипты запуска. [x] Unit-тесты для core/config, core/storage, transcription/router; скрипты run_tests.bat, run_coverage.bat. Manual tests (voce.mp3).
-9) Документация (обновлена 2025-11-21: фиксы Windows/AMD, загрузка модели, инструкции).
+9) Документация (обновлена 2025-11-26: фиксы Windows/AMD, загрузка модели, инструкции, диагностика).
 10) CI: Ruff и .gitignore.
 
 

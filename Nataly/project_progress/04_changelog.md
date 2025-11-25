@@ -25,3 +25,13 @@
   - Результат: `SKIPPED (Model may not be available locally; skip heavy smoke test)`
   - Что дальше: предзагрузить модель faster-whisper и убедиться в наличии `ffmpeg`
 - **Tests**: Выполнен ручной тест `scripts/test/test_voce_simple.py` на файле `voce.mp3`. Подтверждена работоспособность пайплайна транскрибации с локальной моделью (Provider: local:faster-whisper).
+
+2025-11-26
+- **Bot Runtime Fix**: Обновлен `src/app.py` для совместимости с `aiogram 3.22.0`. Использован `DefaultBotProperties` вместо устаревшего параметра `parse_mode` в конструкторе `Bot`.
+- **Diagnostic Suite**: Добавлен набор скриптов для глубокой диагностики и обслуживания окружения (Windows/CUDA):
+  - `scripts/servises/`: `test_cuda.py`, `recreate_venv.bat`, `copy_model_to_project.py`.
+  - `scripts/test/`: `benchmark_cuda.py` (замер скорости транскрибации), `check_cuda.py`, `check_db.py`, `debug_env.py`.
+  - `scripts/debug/`: `check_model_cache.py`, `test_faster_whisper_simple.py`.
+- **Dependencies**: Обновлен `requirements.txt` для соответствия текущему окружению (aiogram 3.22.0, pydantic 2.x).
+- **Status**: Приложение запущено в режиме Polling, транскрибация работает на GPU (при наличии CUDA) и CPU.
+- **Project Structure**: Финализация структуры скриптов (debug, servises), обновление .gitignore (исключение артефактов тестов, venv), удаление устаревшего скрипта покрытия.

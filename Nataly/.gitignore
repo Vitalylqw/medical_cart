@@ -14,5 +14,6 @@ build/
 .ruff_cache/
 var/
 scripts/bin/
-
-
+.coverage
+.hypothesis/
+htmlcov/
