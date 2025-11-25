@@ -1,8 +1,8 @@
 import pymysql
 
-MY_SQL_IP  = '185.219.40.60'
-MY_SQL_USER = 'instrumentoz'
-MY_SQL_PASS = 'aqgj~ztb48Q9'
+MY_SQL_IP  = '******'
+MY_SQL_USER = '******'
+MY_SQL_PASS = '*******'
 MY_SQL_DB_TEST = 'medical'
 
 def clos_connect(cursor_mysql,conn_mysql):
